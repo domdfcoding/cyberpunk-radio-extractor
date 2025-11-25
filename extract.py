@@ -132,7 +132,7 @@ def extract_track(
 			wem_filename.write_bytes(contents)
 			transcode_file(wem_filename, mp3_filename)
 
-	track.set_id3_metadata(mp3_filename, station, album_art=album_art_data[station])
+	track.set_id3_metadata(mp3_filename, station, album_art=album_art_data.get(station))
 
 
 if __name__ == "__main__":
