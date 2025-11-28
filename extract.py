@@ -3,6 +3,7 @@ from io import BytesIO
 from typing import IO
 
 # 3rd party
+import click
 import dom_toml
 from cp2077_extractor.audio_data.radio_stations import Track, radio_jingle_ids, radio_stations
 from cp2077_extractor.cr2w.io import parse_cr2w_buffer
@@ -85,10 +86,13 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 	return album_art_data
 
 
-def main():
-	config = dom_toml.load("config.toml")
-
-	install_dir = PathPlus(config["config"]["install_dir"])
+@click.argument("-i", "--install-dir", default=None)
+@click.option("-j/-J", "--jingles/--no-jingles", is_flag=True, default=True)
+@click.command()
+def main(jingles: bool = True, install_dir: str | None = None):
+	if not install_dir:
+		config = dom_toml.load("config.toml")
+		install_dir = PathPlus(config["config"]["install_dir"])
 
 	archive_file = install_dir / "archive/pc/content" / "audio_2_soundbanks.archive"
 	assert archive_file.is_file()
@@ -109,7 +113,7 @@ def main():
 				mp3_filename = station_dir / (track.filename_stub + ".mp3")
 				extract_track(track, station, mp3_filename, archive, fp, album_art_data)
 
-			if station in radio_jingle_ids:
+			if jingles and station in radio_jingle_ids:
 				for wem_name in radio_jingle_ids[station]:
 					mp3_filename = station_dir / f"jingle_{wem_name}.mp3"
 					track = Track(station, "Jingle", wem_name)
