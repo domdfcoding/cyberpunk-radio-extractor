@@ -27,7 +27,7 @@ lines_between_types = 0
 use_parentheses = true
 remove_redundant_aliases = true
 default_section = "THIRDPARTY"
-known_third_party = [ "click", "dom_toml",]
+known_third_party = [ "click", "consolekit", "dom_toml", "domdf_python_tools", "pillow",]
 known_first_party = [ "cyberpunk_radio_extractor",]
 
 [config]
