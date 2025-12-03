@@ -24,3 +24,6 @@ additional_ignore:
   - radio/
   - 'radio.*/'
   - old/
+
+console_scripts:
+ - radio-extractor = "cyberpunk_radio_extractor.__main__:main"

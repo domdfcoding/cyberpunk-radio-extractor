@@ -40,8 +40,14 @@ __all__ = ["main"]
 @version_option(
 		get_version_callback(__version__, "cyberpunk-song-extractor", dependencies=("click", "cp2077-extractor"))
 		)
-@click.option("-i", "--install-dir", default=None)
-@click.option("-j/-J", "--jingles/--no-jingles", is_flag=True, default=True)
+@click.option("-i", "--install-dir", default=None, help="Path to the Cyberpunk 2077 installation.")
+@click.option(
+		"-j/-J",
+		"--jingles/--no-jingles",
+		is_flag=True,
+		default=True,
+		help="Extract jingles for the radio stations."
+		)
 @click.command()
 def main(jingles: bool = True, install_dir: str | None = None) -> None:
 	# 3rd party

@@ -22,6 +22,9 @@ Homepage = "https://github.com/domdfcoding/cyberpunk-radio-extractor"
 "Issue Tracker" = "https://github.com/domdfcoding/cyberpunk-radio-extractor/issues"
 "Source Code" = "https://github.com/domdfcoding/cyberpunk-radio-extractor"
 
+[project.scripts]
+radio-extractor = '"cyberpunk_radio_extractor.__main__:main"'
+
 [tool.whey]
 base-classifiers = []
 python-versions = [ "3.10", "3.11", "3.12",]
