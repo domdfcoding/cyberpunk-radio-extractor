@@ -69,15 +69,15 @@ def main(
 		# 3rd party
 		import dom_toml
 		config = dom_toml.load("config.toml")
-		install_dir = PathPlus(config["config"]["install_dir"])
+		install_dir_p = PathPlus(config["config"]["install_dir"])
 
-	archive_file = install_dir / "archive/pc/content" / "audio_2_soundbanks.archive"
+	archive_file = install_dir_p / "archive/pc/content" / "audio_2_soundbanks.archive"
 	assert archive_file.is_file()
 
-	output_dir = PathPlus(output_dir)
-	output_dir.maybe_make()
+	output_dir_p = PathPlus(output_dir)
+	output_dir_p.maybe_make()
 
-	album_art_data = get_album_art(install_dir)
+	album_art_data = get_album_art(install_dir_p)
 
 	archive = REDArchive.load_archive(archive_file)
 
@@ -88,7 +88,7 @@ def main(
 			if verbose:
 				progbar.write(f"===== {station} =====")
 
-			station_dir = output_dir / station
+			station_dir = output_dir_p / station
 			station_dir.maybe_make()
 
 			for track in station_data:
