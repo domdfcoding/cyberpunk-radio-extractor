@@ -26,4 +26,4 @@ additional_ignore:
   - old/
 
 console_scripts:
- - radio-extractor = "cyberpunk_radio_extractor.__main__:main"
+ - radio-extractor = cyberpunk_radio_extractor.__main__:main

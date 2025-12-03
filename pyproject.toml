@@ -23,7 +23,7 @@ Homepage = "https://github.com/domdfcoding/cyberpunk-radio-extractor"
 "Source Code" = "https://github.com/domdfcoding/cyberpunk-radio-extractor"
 
 [project.scripts]
-radio-extractor = '"cyberpunk_radio_extractor.__main__:main"'
+radio-extractor = "cyberpunk_radio_extractor.__main__:main"
 
 [tool.whey]
 base-classifiers = []

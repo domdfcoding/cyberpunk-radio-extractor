@@ -4,3 +4,4 @@ cp2077-extractor>=0.1.0
 dom-toml>=2.1.0
 domdf-python-tools>=3.10.0
 pillow>=11.0.0
+tqdm>=4.67.1
