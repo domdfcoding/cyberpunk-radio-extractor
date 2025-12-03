@@ -13,6 +13,40 @@ from cp2077_extractor.utils import transcode_file
 from domdf_python_tools.paths import PathPlus, TemporaryPathPlus
 from PIL import Image, ImageDraw, ImageOps
 
+image_size: tuple[int, int] = 512, 512
+
+
+def get_bottom_left_text(archive: REDArchive, fp: IO):
+	scanner_atlas_file = "base/gameplay/gui/widgets/scanning/scanner_tooltip/atlas_scanner.xbm"
+	file = archive.file_list.find_filename(scanner_atlas_file)
+	crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
+	img: Image.Image = texture_to_image(crw2_file.root_chunk)
+	img = img.crop((745, 305, img.width, 364))
+	offset_l, offset_b = 20, 23
+	add_top = image_size[1] - offset_b - img.height
+	add_right = image_size[0] - offset_l - img.width
+	img = ImageOps.expand(img, (offset_l, add_top, add_right, offset_b))
+
+	return img
+
+
+def get_album_art_base(bottom_left_text_img: Image.Image, background: Image.Image):
+
+	border_colour = "#913232"
+
+	draw = ImageDraw.Draw(bottom_left_text_img)
+	draw.line([(17, 17), (17, image_size[1] - 17), (image_size[0] - 17 - 20, image_size[1] - 17),
+				(image_size[0] - 17, image_size[1] - 17 - 20), (image_size[0] - 17, 17), (17, 17)],
+				width=4,
+				fill=border_colour)
+	draw.line([(17, 17 - 2), (17, image_size[1] - 17 + 2)], width=4, fill=border_colour)
+	draw.line([(17, 15), (image_size[0] - 17 + 1, 15)], width=2, fill=border_colour)
+	bottom_left_text_img_bg = Image.composite(
+			Image.new("RGBA", image_size, border_colour), background, bottom_left_text_img
+			)
+
+	return bottom_left_text_img_bg, bottom_left_text_img
+
 
 def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 	archive_file = install_dir / "archive/pc/content" / "basegame_1_engine.archive"
@@ -25,11 +59,11 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 		file = archive.file_list.find_filename(station_icons_file)
 		crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
 		img: Image.Image = texture_to_image(crw2_file.root_chunk)
-
-	image_size = 512, 512
+		bottom_left_text_img = get_bottom_left_text(archive, fp)
 
 	image_bounds = {
-			"96.1 Ritual FM": (0, 0, 346, 332),  # "99.9 Impulse": (0, 332, 345, 642),
+			"96.1 Ritual FM": (0, 0, 346, 332),  #
+			# TODO: "99.9 Impulse": (0, 332, 345, 642),
 			"89.7 Growl FM": (0, 642, 246, 971),
 			"103.5 Radio PEBKAC": (0, 971, 357, img.height),
 			"107.3 Morro Rock Radio": (346, 0, 750, 196),
@@ -45,6 +79,11 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 			}
 
 	album_art_data = {}
+
+	background = Image.new("RGBA", image_size, "#0e0204")
+	foreground = Image.new("RGBA", image_size, "#77ffff")
+
+	album_art_base, album_art_base_mask = get_album_art_base(bottom_left_text_img, background)
 
 	for station, bounds in image_bounds.items():
 		new_img = img.crop(bounds)
@@ -64,20 +103,10 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 			# Odd
 			add_top += 1
 
-		background = Image.new("RGBA", image_size, "#0e0204")
-		foreground = Image.new("RGBA", image_size, "#77ffff")
 		new_img = ImageOps.expand(new_img, (add_left, add_top, add_right, add_bottom))
 		album_art = Image.composite(foreground, background, new_img)
 
-		border_colour = "#913232"
-
-		draw = ImageDraw.Draw(album_art)
-		draw.line([(17, 17), (17, album_art.height - 17), (album_art.width - 17 - 20, album_art.height - 17),
-					(album_art.width - 17, album_art.height - 17 - 20), (album_art.width - 17, 17), (17, 17)],
-					width=4,
-					fill=border_colour)
-		draw.line([(17, 17 - 2), (17, album_art.height - 17 + 2)], width=4, fill=border_colour)
-		draw.line([(17, 15), (album_art.width - 17 + 1, 15)], width=2, fill=border_colour)
+		album_art = Image.composite(album_art_base, album_art, album_art_base_mask)
 
 		buffer = BytesIO()
 		album_art.save(buffer, "png")
@@ -86,7 +115,7 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 	return album_art_data
 
 
-@click.argument("-i", "--install-dir", default=None)
+@click.option("-i", "--install-dir", default=None)
 @click.option("-j/-J", "--jingles/--no-jingles", is_flag=True, default=True)
 @click.command()
 def main(jingles: bool = True, install_dir: str | None = None):
