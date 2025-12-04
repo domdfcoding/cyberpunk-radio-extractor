@@ -93,3 +93,6 @@ def extract_radio_songs(
 					mp3_filename = station_dir / f"jingle_{wem_name}.mp3"
 					track = Track(station, "Jingle", wem_name)
 					extract_track(track, station, mp3_filename, archive, fp, album_art_data.get(station))
+
+			if verbose:
+				progbar.write('')
