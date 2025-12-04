@@ -64,6 +64,8 @@ def main(
 		config = dom_toml.load("config.toml")
 		install_dir = config["config"]["install_dir"]
 
+	assert isinstance(install_dir, str)
+
 	album_art_data = get_album_art(install_dir)
 
 	extract_radio_songs(install_dir, output_dir, album_art_data=album_art_data, jingles=jingles, verbose=verbose)

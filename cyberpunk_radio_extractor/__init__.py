@@ -27,16 +27,15 @@ Extract Cyberpunk 2077 radios (and jingles) as MP3 files with album art.
 #
 
 # stdlib
-from os import PathLike
 
 # 3rd party
 import tqdm
 from cp2077_extractor.audio_data.radio_stations import Track, radio_jingle_ids, radio_stations
 from cp2077_extractor.redarchive_reader import REDArchive
 from domdf_python_tools.paths import PathPlus
+from domdf_python_tools.typing import PathLike
 
 # this package
-from cyberpunk_radio_extractor.album_art import get_album_art
 from cyberpunk_radio_extractor.audio import extract_track
 
 __all__ = ["extract_radio_songs"]

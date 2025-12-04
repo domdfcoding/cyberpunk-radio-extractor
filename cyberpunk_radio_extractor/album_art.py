@@ -28,7 +28,6 @@ Functions for creating album art.
 
 # stdlib
 from io import BytesIO
-from os import PathLike
 from typing import IO
 
 # 3rd party
@@ -37,9 +36,18 @@ from cp2077_extractor.cr2w.io import parse_cr2w_buffer
 from cp2077_extractor.cr2w.textures import texture_to_image
 from cp2077_extractor.redarchive_reader import REDArchive
 from domdf_python_tools.paths import PathPlus
+from domdf_python_tools.typing import PathLike
 from PIL import Image, ImageDraw, ImageOps
 
-__all__ = ["AlbumArt", "get_album_art", "get_album_art_base", "get_bottom_left_text", "image_to_png_bytes"]
+__all__ = [
+		"AlbumArt",
+		"get_album_art",
+		"get_album_art_base",
+		"get_bottom_left_text",
+		"get_icons_atlas",
+		"get_station_logos",
+		"image_to_png_bytes",
+		]
 
 image_size: tuple[int, int] = 512, 512
 
@@ -199,7 +207,41 @@ def image_to_png_bytes(image: Image.Image) -> bytes:
 	return buffer.getvalue()
 
 
-# TODO: proper album art for misc, and for Impulse
+_station_names = {
+		"96.1 Ritual FM",
+		"99.9 Impulse",
+		"89.7 Growl FM",
+		"103.5 Radio PEBKAC",
+		"107.3 Morro Rock Radio",
+		"89.3 Radio Vexelstrom",
+		"91.9 Royal Blue Radio",
+		"98.7 Body Heat Radio",
+		"101.9 The Dirge",
+		"88.9 Pacific Dreams",
+		"95.2 Samizdat Radio",
+		"106.9 30 Principales",
+		"107.5 Dark Star",
+		"92.9 Night FM",
+		}
+
+
+def get_icons_atlas(archive: REDArchive, fp: IO) -> Image.Image:
+	"""
+	Get the radiostation icons atlas from the game files.
+
+	:param archive: The ``basegame_1_engine.archive`` archive.
+	:param fp: Open file handle to the archive.
+	"""
+
+	station_icons_file = "base/gameplay/gui/common/icons/radiostations_icons.xbm"
+	file = archive.file_list.find_filename(station_icons_file)
+	crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
+	assert isinstance(crw2_file.root_chunk, CBitmapTexture)
+	img: Image.Image = texture_to_image(crw2_file.root_chunk)
+	return img
+
+
+# TODO: proper album art for misc
 
 
 def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
@@ -209,38 +251,46 @@ def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
 	:param install_dir: Path to the Cyberpunk 2077 installation.
 	"""
 
-	archive_file = PathPlus(install_dir) / "archive/pc/content" / "basegame_1_engine.archive"
+	archive_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
 	assert archive_file.is_file()
 
 	archive = REDArchive.load_archive(archive_file)
 
-	station_icons_file = "base/gameplay/gui/common/icons/radiostations_icons.xbm"
 	with open(archive_file, "rb") as fp:
-		file = archive.file_list.find_filename(station_icons_file)
-		crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
-		assert isinstance(crw2_file.root_chunk, CBitmapTexture)
-		img: Image.Image = texture_to_image(crw2_file.root_chunk)
+		img = get_icons_atlas(archive, fp)
 		bottom_left_text_img = get_bottom_left_text(archive, fp)
 
 	album_art_data = {}
 	album_art_helper = AlbumArt(logo_atlas=img, bottom_left_text_img=bottom_left_text_img)
 
-	for station in {
-			"96.1 Ritual FM",  #
-			# TODO: "99.9 Impulse",
-			"89.7 Growl FM",
-			"103.5 Radio PEBKAC",
-			"107.3 Morro Rock Radio",
-			"89.3 Radio Vexelstrom",
-			"91.9 Royal Blue Radio",
-			"98.7 Body Heat Radio",
-			"101.9 The Dirge",
-			"88.9 Pacific Dreams",
-			"95.2 Samizdat Radio",
-			"106.9 30 Principales",
-			"107.5 Dark Star",
-			"92.9 Night FM",
-			}:
+	for station in _station_names:
 		album_art_data[station] = image_to_png_bytes(album_art_helper.get_album_art(station))
 
 	return album_art_data
+
+
+def get_station_logos(install_dir: PathLike) -> dict[str, bytes]:
+	"""
+	Get the logos of the game's radio stations.
+
+	:param install_dir: Path to the Cyberpunk 2077 installation.
+	"""
+
+	archive_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
+	assert archive_file.is_file()
+
+	archive = REDArchive.load_archive(archive_file)
+
+	with open(archive_file, "rb") as fp:
+		img = get_icons_atlas(archive, fp)
+
+	station_logos_data = {}
+	album_art_helper = AlbumArt(
+			logo_atlas=img,
+			bottom_left_text_img=Image.new("RGBA", image_size, "#00000000"),
+			)
+
+	for station in _station_names:
+		station_logos_data[station] = image_to_png_bytes(album_art_helper.get_station_logo(station))
+
+	return station_logos_data
