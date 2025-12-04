@@ -28,6 +28,7 @@ Functions for creating album art.
 
 # stdlib
 from io import BytesIO
+from os import PathLike
 from typing import IO
 
 # 3rd party
@@ -198,14 +199,17 @@ def image_to_png_bytes(image: Image.Image) -> bytes:
 	return buffer.getvalue()
 
 
-def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
+# TODO: proper album art for misc, and for Impulse
+
+
+def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
 	"""
 	Get album art for the game's radio stations.
 
 	:param install_dir: Path to the Cyberpunk 2077 installation.
 	"""
 
-	archive_file = install_dir / "archive/pc/content" / "basegame_1_engine.archive"
+	archive_file = PathPlus(install_dir) / "archive/pc/content" / "basegame_1_engine.archive"
 	assert archive_file.is_file()
 
 	archive = REDArchive.load_archive(archive_file)

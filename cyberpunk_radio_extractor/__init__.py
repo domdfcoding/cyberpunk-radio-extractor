@@ -51,6 +51,7 @@ __email__: str = "dominic@davis-foster.co.uk"
 def extract_radio_songs(
 		install_dir: PathLike,
 		output_dir: PathLike,
+		album_art_data: dict[str, bytes],
 		jingles: bool = True,
 		verbose: bool = False,
 		) -> None:
@@ -59,19 +60,17 @@ def extract_radio_songs(
 
 	:param jingles: Also extract jingles.
 	:param install_dir: Path to the Cyberpunk 2077 installation.
+	:param album_art_data: Mapping of radio station names to album art.
 	:param output_dir:
 	:param verbose:
 	"""
 
-	install_dir_p = PathPlus(install_dir)
-
 	output_dir_p = PathPlus(output_dir)
 	output_dir_p.maybe_make()
 
-	archive_file = install_dir_p / "archive/pc/content" / "audio_2_soundbanks.archive"
+	archive_file = PathPlus(install_dir) / "archive/pc/content" / "audio_2_soundbanks.archive"
 	assert archive_file.is_file()
 
-	album_art_data = get_album_art(install_dir_p)
 	archive = REDArchive.load_archive(archive_file)
 	total_tracks = sum(len(sd) for sd in radio_stations.values())
 

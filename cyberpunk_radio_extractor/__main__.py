@@ -55,13 +55,18 @@ def main(
 	Extract Cyberpunk 2077 radios (and jingles) as MP3 files with album art.
 	"""
 
+	# this package
+	from cyberpunk_radio_extractor.album_art import get_album_art
+
 	if not install_dir:
 		# 3rd party
 		import dom_toml
 		config = dom_toml.load("config.toml")
 		install_dir = config["config"]["install_dir"]
 
-	extract_radio_songs(install_dir, output_dir, jingles=jingles, verbose=verbose)
+	album_art_data = get_album_art(install_dir)
+
+	extract_radio_songs(install_dir, output_dir, album_art_data=album_art_data, jingles=jingles, verbose=verbose)
 
 
 if __name__ == "__main__":
