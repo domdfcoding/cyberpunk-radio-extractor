@@ -31,6 +31,7 @@ from io import BytesIO
 from typing import IO
 
 # 3rd party
+from cp2077_extractor.cr2w.datatypes import CBitmapTexture
 from cp2077_extractor.cr2w.io import parse_cr2w_buffer
 from cp2077_extractor.cr2w.textures import texture_to_image
 from cp2077_extractor.redarchive_reader import REDArchive
@@ -53,6 +54,7 @@ def get_bottom_left_text(archive: REDArchive, fp: IO) -> Image.Image:
 	scanner_atlas_file = "base/gameplay/gui/widgets/scanning/scanner_tooltip/atlas_scanner.xbm"
 	file = archive.file_list.find_filename(scanner_atlas_file)
 	crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
+	assert isinstance(crw2_file.root_chunk, CBitmapTexture)
 	img: Image.Image = texture_to_image(crw2_file.root_chunk)
 	img = img.crop((745, 305, img.width, 364))
 	offset_l, offset_b = 20, 23
@@ -212,6 +214,7 @@ def get_album_art(install_dir: PathPlus) -> dict[str, bytes]:
 	with open(archive_file, "rb") as fp:
 		file = archive.file_list.find_filename(station_icons_file)
 		crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
+		assert isinstance(crw2_file.root_chunk, CBitmapTexture)
 		img: Image.Image = texture_to_image(crw2_file.root_chunk)
 		bottom_left_text_img = get_bottom_left_text(archive, fp)
 
