@@ -26,7 +26,7 @@ Homepage = "https://github.com/domdfcoding/cyberpunk-radio-extractor"
 radio-extractor = "cyberpunk_radio_extractor.__main__:main"
 
 [tool.whey]
-base-classifiers = []
+base-classifiers = [ "Typing :: Typed",]
 python-versions = [ "3.10", "3.11", "3.12",]
 python-implementations = [ "CPython",]
 platforms = [ "Windows", "macOS", "Linux",]
