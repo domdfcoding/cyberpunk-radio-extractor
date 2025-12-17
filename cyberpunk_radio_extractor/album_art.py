@@ -41,6 +41,7 @@ from PIL import Image, ImageDraw, ImageOps
 
 __all__ = [
 		"AlbumArt",
+		"AlbumArtHelper",
 		"get_album_art",
 		"get_album_art_base",
 		"get_bottom_left_text",
@@ -113,7 +114,7 @@ def get_album_art_base(
 	return bottom_left_text_img_bg, bottom_left_text_img
 
 
-class AlbumArt:
+class AlbumArtHelper:
 	"""
 	Create album art for a radio stations.
 
@@ -279,6 +280,81 @@ def get_cyberpunk_logo(archive: REDArchive, fp: IO) -> Image.Image:
 	return img
 
 
+class AlbumArt:
+	"""
+	Get album art for the game's music files.
+
+	:param install_dir: Path to the Cyberpunk 2077 installation.
+	"""
+
+	archive_1_file: PathPlus
+	archive_1: REDArchive
+	archive_4_file: PathPlus
+	archive_4: REDArchive
+
+	def __init__(self, install_dir: PathLike) -> None:
+		install_dir = PathPlus(install_dir)
+
+		self.archive_1_file: PathPlus = install_dir / "archive/pc/content/basegame_1_engine.archive"
+		assert self.archive_1_file.is_file()
+		self.archive_1 = REDArchive.load_archive(self.archive_1_file)
+
+		self.archive_4_file: PathPlus = install_dir / "archive/pc/content/basegame_4_gamedata.archive"
+		assert self.archive_4_file.is_file()
+		self.archive_4 = REDArchive.load_archive(self.archive_4_file)
+
+	def get_album_art(self) -> dict[str, bytes]:
+		"""
+		Get album art for the game's radio stations.
+		"""
+
+		with open(self.archive_1_file, "rb") as fp:
+			img = get_icons_atlas(self.archive_1, fp)
+			bottom_left_text_img = get_bottom_left_text(self.archive_1, fp)
+
+		album_art_data = {}
+		album_art_helper = AlbumArtHelper(logo_atlas=img, bottom_left_text_img=bottom_left_text_img)
+
+		for station in _station_names:
+			album_art_data[station] = image_to_png_bytes(album_art_helper.get_album_art(station))
+
+		return album_art_data
+
+	def get_generic_album_art(self) -> bytes:
+		"""
+		Get generic album art for game's music files.
+		"""
+
+		with open(self.archive_4_file, "rb") as fp:
+			logo_img = get_cyberpunk_logo(self.archive_4, fp)
+
+		with open(self.archive_1_file, "rb") as fp:
+			bottom_left_text_img = get_bottom_left_text(self.archive_1, fp)
+
+		album_art_helper = AlbumArtHelper(logo_atlas=logo_img, bottom_left_text_img=bottom_left_text_img)
+		logo_img = album_art_helper.expand_to_output_size(logo_img)
+		return image_to_png_bytes(album_art_helper.album_art_for_logo(logo_img))
+
+	def get_station_logos(self) -> dict[str, bytes]:
+		"""
+		Get the logos of the game's radio stations.
+		"""
+
+		with open(self.archive_1_file, "rb") as fp:
+			img = get_icons_atlas(self.archive_1, fp)
+
+		station_logos_data = {}
+		album_art_helper = AlbumArtHelper(
+				logo_atlas=img,
+				bottom_left_text_img=Image.new("RGBA", image_size, "#00000000"),
+				)
+
+		for station in _station_names:
+			station_logos_data[station] = image_to_png_bytes(album_art_helper.get_station_logo(station))
+
+		return station_logos_data
+
+
 def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
 	"""
 	Get album art for the game's radio stations.
@@ -286,22 +362,8 @@ def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
 	:param install_dir: Path to the Cyberpunk 2077 installation.
 	"""
 
-	archive_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
-	assert archive_file.is_file()
-
-	archive = REDArchive.load_archive(archive_file)
-
-	with open(archive_file, "rb") as fp:
-		img = get_icons_atlas(archive, fp)
-		bottom_left_text_img = get_bottom_left_text(archive, fp)
-
-	album_art_data = {}
-	album_art_helper = AlbumArt(logo_atlas=img, bottom_left_text_img=bottom_left_text_img)
-
-	for station in _station_names:
-		album_art_data[station] = image_to_png_bytes(album_art_helper.get_album_art(station))
-
-	return album_art_data
+	aa = AlbumArt(install_dir)
+	return aa.get_album_art()
 
 
 def get_generic_album_art(install_dir: PathLike) -> bytes:
@@ -311,23 +373,8 @@ def get_generic_album_art(install_dir: PathLike) -> bytes:
 	:param install_dir: Path to the Cyberpunk 2077 installation.
 	"""
 
-	archive1_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
-	archive4_file = PathPlus(install_dir) / "archive/pc/content/basegame_4_gamedata.archive"
-	assert archive1_file.is_file()
-	assert archive4_file.is_file()
-
-	archive1 = REDArchive.load_archive(archive1_file)
-	archive4 = REDArchive.load_archive(archive4_file)
-
-	with open(archive4_file, "rb") as fp:
-		logo_img = get_cyberpunk_logo(archive4, fp)
-
-	with open(archive1_file, "rb") as fp:
-		bottom_left_text_img = get_bottom_left_text(archive1, fp)
-
-	album_art_helper = AlbumArt(logo_atlas=logo_img, bottom_left_text_img=bottom_left_text_img)
-	logo_img = album_art_helper.expand_to_output_size(logo_img)
-	return image_to_png_bytes(album_art_helper.album_art_for_logo(logo_img))
+	aa = AlbumArt(install_dir)
+	return aa.get_generic_album_art()
 
 
 def get_station_logos(install_dir: PathLike) -> dict[str, bytes]:
@@ -337,21 +384,5 @@ def get_station_logos(install_dir: PathLike) -> dict[str, bytes]:
 	:param install_dir: Path to the Cyberpunk 2077 installation.
 	"""
 
-	archive_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
-	assert archive_file.is_file()
-
-	archive = REDArchive.load_archive(archive_file)
-
-	with open(archive_file, "rb") as fp:
-		img = get_icons_atlas(archive, fp)
-
-	station_logos_data = {}
-	album_art_helper = AlbumArt(
-			logo_atlas=img,
-			bottom_left_text_img=Image.new("RGBA", image_size, "#00000000"),
-			)
-
-	for station in _station_names:
-		station_logos_data[station] = image_to_png_bytes(album_art_helper.get_station_logo(station))
-
-	return station_logos_data
+	aa = AlbumArt(install_dir)
+	return aa.get_station_logos()
