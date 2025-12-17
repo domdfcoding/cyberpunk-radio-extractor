@@ -44,6 +44,8 @@ __all__ = [
 		"get_album_art",
 		"get_album_art_base",
 		"get_bottom_left_text",
+		"get_cyberpunk_logo",
+		"get_generic_album_art",
 		"get_icons_atlas",
 		"get_station_logos",
 		"image_to_png_bytes",
@@ -163,7 +165,16 @@ class AlbumArt:
 
 		bounds = self.image_bounds[station]
 		new_img = self.logo_atlas.crop(bounds)
-		width, height = new_img.size
+		return self.expand_to_output_size(new_img)
+
+	def expand_to_output_size(self, img: Image.Image) -> Image.Image:
+		"""
+		Expand the given image to the output image size (adding transparency evenly around all four sides).
+
+		:param img:
+		"""
+
+		width, height = img.size
 
 		add_width = image_size[0] - width
 
@@ -179,7 +190,7 @@ class AlbumArt:
 			# Odd
 			add_top += 1
 
-		new_img = ImageOps.expand(new_img, (add_left, add_top, add_right, add_bottom))
+		new_img = ImageOps.expand(img, (add_left, add_top, add_right, add_bottom))
 		return new_img
 
 	def get_album_art(self, station: str) -> Image.Image:
@@ -190,7 +201,16 @@ class AlbumArt:
 		"""
 
 		station_logo = self.get_station_logo(station)
-		album_art = Image.composite(self.foreground, self.background, station_logo)
+		return self.album_art_for_logo(station_logo)
+
+	def album_art_for_logo(self, logo: Image.Image) -> Image.Image:
+		"""
+		Returns the album art with the given logo.
+
+		:param station:
+		"""
+
+		album_art = Image.composite(self.foreground, self.background, logo)
 		album_art = Image.composite(self.album_art_base, album_art, self.album_art_base_mask)
 		return album_art
 
@@ -241,7 +261,22 @@ def get_icons_atlas(archive: REDArchive, fp: IO) -> Image.Image:
 	return img
 
 
-# TODO: proper album art for misc
+def get_cyberpunk_logo(archive: REDArchive, fp: IO) -> Image.Image:
+	"""
+	Get the Cyberpunk logo artwork from the game files.
+
+	:param archive: The ``basegame_4_gamedata.archive`` archive.
+	:param fp: Open file handle to the archive.
+	"""
+
+	logo_file = "base/environment/decoration/cp77_logo/textures/cp77_logo_blue.xbm"
+	file = archive.file_list.find_filename(logo_file)
+	crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
+	assert isinstance(crw2_file.root_chunk, CBitmapTexture)
+	img: Image.Image = texture_to_image(crw2_file.root_chunk)
+	scale = (image_size[0] - 60) / img.width
+	img = img.resize((round(img.width * scale), round(img.height * scale)))
+	return img
 
 
 def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
@@ -267,6 +302,32 @@ def get_album_art(install_dir: PathLike) -> dict[str, bytes]:
 		album_art_data[station] = image_to_png_bytes(album_art_helper.get_album_art(station))
 
 	return album_art_data
+
+
+def get_generic_album_art(install_dir: PathLike) -> bytes:
+	"""
+	Get generic album art for game's music files.
+
+	:param install_dir: Path to the Cyberpunk 2077 installation.
+	"""
+
+	archive1_file = PathPlus(install_dir) / "archive/pc/content/basegame_1_engine.archive"
+	archive4_file = PathPlus(install_dir) / "archive/pc/content/basegame_4_gamedata.archive"
+	assert archive1_file.is_file()
+	assert archive4_file.is_file()
+
+	archive1 = REDArchive.load_archive(archive1_file)
+	archive4 = REDArchive.load_archive(archive4_file)
+
+	with open(archive4_file, "rb") as fp:
+		logo_img = get_cyberpunk_logo(archive4, fp)
+
+	with open(archive1_file, "rb") as fp:
+		bottom_left_text_img = get_bottom_left_text(archive1, fp)
+
+	album_art_helper = AlbumArt(logo_atlas=logo_img, bottom_left_text_img=bottom_left_text_img)
+	logo_img = album_art_helper.expand_to_output_size(logo_img)
+	return image_to_png_bytes(album_art_helper.album_art_for_logo(logo_img))
 
 
 def get_station_logos(install_dir: PathLike) -> dict[str, bytes]:
