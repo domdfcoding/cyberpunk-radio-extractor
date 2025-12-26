@@ -157,6 +157,17 @@ class AlbumArtHelper:
 				"92.9 Night FM": (628, 965, logo_atlas.width - 30, logo_atlas.height - 65),
 				}
 
+		self.__background_colour = background_colour
+		self.__graphic_colour = graphic_colour
+
+	@property
+	def background_colour(self) -> str:
+		return self.__background_colour
+
+	@property
+	def graphic_colour(self) -> str:
+		return self.__graphic_colour
+
 	def get_station_logo(self, station: str) -> Image.Image:
 		"""
 		Get the logo graphic for the given station.
