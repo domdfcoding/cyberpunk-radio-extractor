@@ -59,7 +59,7 @@ def main(
 	import dom_toml
 
 	# this package
-	from cyberpunk_radio_extractor.album_art import get_album_art
+	from cyberpunk_radio_extractor.album_art import AlbumArt
 	config = dom_toml.load("config.toml")
 
 	if not install_dir:
@@ -71,7 +71,9 @@ def main(
 	assert isinstance(install_dir, str)
 	assert isinstance(output_dir, str)
 
-	album_art_data = get_album_art(install_dir)
+	aa = AlbumArt(install_dir)
+	album_art_data = aa.get_album_art()
+	album_art_data["misc"] = aa.get_generic_album_art()
 
 	extract_radio_songs(install_dir, output_dir, album_art_data=album_art_data, jingles=jingles, verbose=verbose)
 
