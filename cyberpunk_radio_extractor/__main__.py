@@ -28,8 +28,8 @@ Extract Cyberpunk 2077 radios (and jingles) as MP3 files with album art.
 
 # 3rd party
 import click
-from consolekit.options import flag_option, version_option
-from consolekit.versions import get_version_callback
+from consolekit.options import flag_option
+from consolekit.versions import version_callback_option
 
 # this package
 from cyberpunk_radio_extractor import __version__, extract_radio_songs
@@ -37,12 +37,10 @@ from cyberpunk_radio_extractor import __version__, extract_radio_songs
 __all__ = ["main"]
 
 
-@version_option(
-		get_version_callback(
-				__version__,
-				"cyberpunk-song-extractor",
-				dependencies=("click", "cp2077-extractor"),
-				)
+@version_callback_option(
+		__version__,
+		"cyberpunk-song-extractor",
+		dependencies=("click", "cp2077-extractor"),
 		)
 @click.option("-o", "--output-dir", default="radio", help="Path to write files to.")
 @click.option("-i", "--install-dir", default=None, help="Path to the Cyberpunk 2077 installation.")
