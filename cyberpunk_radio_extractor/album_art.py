@@ -162,10 +162,18 @@ class AlbumArtHelper:
 
 	@property
 	def background_colour(self) -> str:
+		"""
+		The chosen background colour of the album art.
+		"""
+
 		return self.__background_colour
 
 	@property
 	def graphic_colour(self) -> str:
+		"""
+		The chosen colour for the station logos.
+		"""
+
 		return self.__graphic_colour
 
 	def get_station_logo(self, station: str) -> Image.Image:
@@ -219,7 +227,7 @@ class AlbumArtHelper:
 		"""
 		Returns the album art with the given logo.
 
-		:param station:
+		:param logo:
 		"""
 
 		album_art = Image.composite(self.foreground, self.background, logo)

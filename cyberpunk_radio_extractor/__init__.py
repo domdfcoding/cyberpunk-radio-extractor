@@ -57,10 +57,10 @@ def extract_radio_songs(
 	"""
 	Extract Cyberpunk 2077 radios (and jingles) as MP3 files with album art.
 
-	:param jingles: Also extract jingles.
 	:param install_dir: Path to the Cyberpunk 2077 installation.
-	:param album_art_data: Mapping of radio station names to album art.
 	:param output_dir:
+	:param album_art_data: Mapping of radio station names to album art.
+	:param jingles: Also extract jingles.
 	:param verbose:
 	"""
 
