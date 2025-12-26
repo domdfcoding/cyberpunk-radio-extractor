@@ -262,15 +262,16 @@ def get_icons_atlas(archive: REDArchive, fp: IO) -> Image.Image:
 	return img
 
 
-def get_cyberpunk_logo(archive: REDArchive, fp: IO) -> Image.Image:
+def get_cyberpunk_logo(archive: REDArchive, fp: IO, logo_filename: str = "cp77_logo_blue.xbm") -> Image.Image:
 	"""
 	Get the Cyberpunk logo artwork from the game files.
 
 	:param archive: The ``basegame_4_gamedata.archive`` archive.
 	:param fp: Open file handle to the archive.
+	:param logo_filename: The filename (in ``base/environment/decoration/cp77_logo/textures``) of the logo. Either ``"cp77_logo_blue.xbm"`` or ``"cp77_logo_yellow.xbm"``.
 	"""
 
-	logo_file = "base/environment/decoration/cp77_logo/textures/cp77_logo_blue.xbm"
+	logo_file = f"base/environment/decoration/cp77_logo/textures/{logo_filename}"
 	file = archive.file_list.find_filename(logo_file)
 	crw2_file = parse_cr2w_buffer(BytesIO(archive.extract_file(fp, file)))
 	assert isinstance(crw2_file.root_chunk, CBitmapTexture)
