@@ -26,10 +26,8 @@ Extract Cyberpunk 2077 radios (and jingles) as MP3 files with album art.
 #  OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# stdlib
-
 # 3rd party
-import tqdm
+import araokaat
 from cp2077_extractor.audio_data.radio_stations import Track, radio_jingle_ids, radio_stations
 from cp2077_extractor.redarchive_reader import REDArchive
 from domdf_python_tools.paths import PathPlus
@@ -73,7 +71,7 @@ def extract_radio_songs(
 	archive = REDArchive.load_archive(archive_file)
 	total_tracks = sum(len(sd) for sd in radio_stations.values())
 
-	with open(archive_file, "rb") as fp, tqdm.tqdm(total=total_tracks) as progbar:
+	with open(archive_file, "rb") as fp, araokaat.araokaat(total=total_tracks) as progbar:
 		for station, station_data in radio_stations.items():
 			if verbose:
 				progbar.write(f"===== {station} =====")
